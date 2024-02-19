@@ -2,7 +2,6 @@
 Plugin para ativação de comandos através de donate dos jogadores em meus servidores de Fistful of Frags!
 
 ## Comandos:
----
 - ```sm_give <weaponname>```:
   Dê uma arma para todos os jogadores vivos.
   
