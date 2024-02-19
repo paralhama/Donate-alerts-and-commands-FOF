@@ -11,7 +11,7 @@
 // new largeTntBarrel[MAXPLAYERS];
 
 public Plugin:myinfo = {
-    name = "Donation message and some commands [FOF]",
+    name = "Donation alert and commands [FOF]",
     author = "Paralhama",
     description = "Show a donation message from players and some other commands",
     version = "1.0",
