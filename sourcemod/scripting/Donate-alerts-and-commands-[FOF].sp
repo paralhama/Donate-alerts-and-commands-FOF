@@ -11,11 +11,11 @@
 // new largeTntBarrel[MAXPLAYERS];
 
 public Plugin:myinfo = {
-    name = "Donation message and some commands",
+    name = "Donation message and some commands [FOF]",
     author = "Paralhama",
     description = "Show a donation message from players and some other commands",
     version = "1.0",
-    url = ""
+    url = "https://farwest.com.br/comandos/"
 };
 
 new const String:g_weapons[MAX_WEAPONS][] = {
