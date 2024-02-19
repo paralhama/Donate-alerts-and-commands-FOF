@@ -19,4 +19,4 @@ Plugin para ativação de comandos através de donate de jogadores!
 * ```sm_alert <color> <text>```:
   Envie mensagens para todos os jogadores com cores e com a possibilidade de pular para a próxima linha.
   Exemplo:
-  ```sm_alert {red} Olá\n{blue}Mundo!```
+  ```sm_alert {red}Olá\n{blue}Mundo!```
