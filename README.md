@@ -15,4 +15,4 @@ Exibe todas as armas disponiveis
 ---
 * ```sm_alert <color> <text>```:
     - Envia mensagens para todos com cores e com a possiblidade de pular para próxima linha
-exemplo: ```sm_alert {red} Olá\n{bue}Mundo!```
+exemplo:  ```sm_alert {red} Olá\n{bue}Mundo!```
