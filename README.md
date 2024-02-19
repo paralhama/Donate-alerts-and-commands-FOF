@@ -2,6 +2,7 @@
 Plugin para ativação de comandos através de donate de jogadores!
 
 ## Comandos:
+---
 - ```sm_give <weaponname>```:
   Dê uma arma para todos os jogadores vivos.
   
@@ -21,3 +22,4 @@ Plugin para ativação de comandos através de donate de jogadores!
   Exemplo:
   ```sm_alert {red}Olá\n{blue}Mundo!```  
 ![image](https://github.com/paralhama/Donate-alerts-and-commands/assets/84831503/a6a7f899-c5b0-4e27-9f2a-a5d3420da668)
+---
