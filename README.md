@@ -19,6 +19,7 @@ Plugin para ativação de comandos através de donate de jogadores!
 ---
 * ```sm_alert <color> <text>```:
   Envie mensagens para todos os jogadores com cores e com a possibilidade de pular para a próxima linha.  
+
   Exemplo:
   ```sm_alert {red}Olá\n{blue}Mundo!```  
 ![image](https://github.com/paralhama/Donate-alerts-and-commands/assets/84831503/a6a7f899-c5b0-4e27-9f2a-a5d3420da668)
