@@ -6,7 +6,7 @@
 Da uma arma para todos os jogadores vivos
 
 * ```sm_give2 <weaponname>```:
-- Da duas arma para todos os jogadores vivos
+    - Da duas arma para todos os jogadores vivos
 Use apenas armas que podem ser equipadas nas duas mãos ao mesmo tempo como pistolas
 Se você tentar usar o give2 para Rifles por exemplo a segunda arma será derrubada automaticamente
 
