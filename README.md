@@ -1,5 +1,5 @@
 # Donate-alerts-and-commands [FOF]
-Plugin para ativação de comandos através de donate de jogadores para os meus servidores de Fistful of Frags!
+Plugin para ativação de comandos através de donate dos jogadores em meus servidores de Fistful of Frags!
 
 ## Comandos:
 ---
