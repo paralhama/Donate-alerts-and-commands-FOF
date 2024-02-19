@@ -14,8 +14,6 @@ Se você tentar usar o give2 para Rifles por exemplo a segunda arma será derrub
 Exibe todas as armas disponiveis
 ---
 * ```sm_alert <color> <text>```:
-    - Envia mensagens para todos com cores e com a possiblidade de pular para próxima linha
-
+Envia mensagens para todos com cores e com a possiblidade de pular para próxima linha  
 exemplo:
-
 ```sm_alert {red} Olá\n{bue}Mundo!```
