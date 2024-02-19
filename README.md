@@ -1,4 +1,4 @@
-# Donate-alerts-and-commands
+# Donate-alerts-and-commands [FOF]
 Plugin para ativação de comandos através de donate de jogadores!
 
 ## Comandos:
