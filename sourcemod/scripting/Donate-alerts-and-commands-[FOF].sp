@@ -5,17 +5,28 @@
 #include <morecolors>
 
 #define MAX_WEAPONS 26
-#define TNT_BARREL_MODEL "models/elpaso/barrel2_explosive.mdl"
 #define SOUND_ALERT "halloween/ragged_powerup.wav"
 
-// new largeTntBarrel[MAXPLAYERS];
-
-new String:weapon[32] = "";
-new deadPlayers[MAXPLAYERS];
+new String:WeaponGive1[32] = "";   
+new deadPlayersGive1[MAXPLAYERS+1];
 new numDeadPlayersGive1 = 0;
+
+new String:WeaponGive2[32] = "";
+new deadPlayersGive2[MAXPLAYERS+1];
 new numDeadPlayersGive2 = 0;
-new numDeadPlayersGiveTnt = 0;
+
+new String:ItemPotion[32] = "item_potion";
+new deadPlayersInfinitePeacemaker[MAXPLAYERS+1];
+new numDeadInfinitePeacemaker = 0;
+
+new String:WeaponTnt[32] = "";   
+new deadPlayers100Tnt[MAXPLAYERS+1];
+new numDeadPlayers100Tnt = 0;
 new iAmmoOffset = -1;
+
+new String:MeleeWeapon[32] = "";   
+new deadPlayersMeleeWeapon[MAXPLAYERS+1];
+new numDeadPlayersMeleeWeapon = 0;
 
 public Plugin:myinfo = {
     name = "Donation alert and commands [FOF]",
@@ -33,20 +44,21 @@ new const String:g_weapons[MAX_WEAPONS][] = {
 
 public OnPluginStart()
 {
-	PrecacheSound(SOUND_ALERT, true); 
-	// Comando abaixo temporariamente desativado, não consigo fazer o barril aparecer sempre na frente do jogador :/
-	// RegAdminCmd("sm_barrel", SpawnLargeTntBarrelToAll, ADMFLAG_ROOT, "Give a large barrel TNT to all players");
-	// Se for reativar lembrar de remover comentário "new largeTntBarrel[MAXPLAYERS];" No começo do código
 	RegAdminCmd("sm_alert", Cmd_Alert, ADMFLAG_ROOT, "Prints something with formatting and colors");
-	RegAdminCmd("sm_tnt", Give100tntAll, ADMFLAG_ROOT, "<tntname> - Gives 100 TNT to all players");
-	RegAdminCmd("sm_give", Give1WeaponAll, ADMFLAG_ROOT, "<weaponname> - Gives a weapon to all players");
-	RegAdminCmd("sm_give2", Give2WeaponAll, ADMFLAG_ROOT, "<weaponname> - Gives two weapons to all players");
-	RegAdminCmd("sm_givelist", WeaponList, ADMFLAG_ROOT, "- List of the weapon names");
-	RegAdminCmd("sm_infinite_peacemaker", InfinitePeacemaker, ADMFLAG_ROOT, "Gives two infinite peacemakers for 35 seconds");
+	RegAdminCmd("sm_gunslist", GunsList, ADMFLAG_ROOT, "- List of the weapon names");
+	RegAdminCmd("sm_givecw", GiveMeleeWeaponAll, ADMFLAG_ROOT, "<melee weapon name> - Gives 20 melee weapon to all players");
+	RegAdminCmd("sm_give", Give1WeaponAll, ADMFLAG_ROOT, "<weapon name> - Gives a weapon to all players");
+	RegAdminCmd("sm_give2", Give2WeaponAll, ADMFLAG_ROOT, "<weapon name> - Gives two weapons to all players");
+	RegAdminCmd("sm_infpm", InfinitePeacemaker, ADMFLAG_ROOT, "Gives two infinite peacemakers for 35 seconds");
+	RegAdminCmd("sm_tnt", Give100tntAll, ADMFLAG_ROOT, "<tnt name> - Gives 100 dynamite to all players");
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	iAmmoOffset = FindSendPropInfo( "CFoF_Player", "m_iAmmo" );
 }
 
+
+
+
+// ############################## Donate Alert ##################################
 public Action:Cmd_Alert(client, args){
 	if(args<1){
 		ReplyToCommand(client, "[SM] Usage: sm_alert <color> <text> \nExample: !print {red}Hello World! \nYou can use \\n to write in a new line");
@@ -62,24 +74,34 @@ public Action:Cmd_Alert(client, args){
 	CPrintToChatAll(str);
 	return Plugin_Handled;
 }
+// ###########################################################################
 
-public Action:WeaponList(id, args)
+
+
+
+// ############################## Weapon list ##################################
+public Action:GunsList(id, args)
 {
 	new i;
 	for (i = 0; i < MAX_WEAPONS; ++i)
 		ReplyToCommand(id, "%s", g_weapons[i]);
 
-	ReplyToCommand(id, "");
-	ReplyToCommand(id, "* Type sm_give <weaponname> or sm_give2 <weaponname>");
+	ReplyToCommand(id, "----------------");
+	ReplyToCommand(id, "!give <weaponname> To give one weapon to all players\n!give2 <weaponname> To give two weapons to all players");
 
 	return Plugin_Handled;
 }
+// ###########################################################################
 
-public Action:Give100tntAll(id, args)
+
+
+
+// ############################## Give 1 weapon ################################
+public Action:Give1WeaponAll(id, args)
 {
 	if (args < 1)
 	{
-		ReplyToCommand(id, "[SM] Usage: sm_tnt <tntname> (without 'weapon_')\nGives 100 TNT to all players\nType !givelist to see the dynamites list!");
+		ReplyToCommand(id, "[SM] Usage: !give <weapon name> Gives a weapon to all players\nType !gunslist to see the weapons list!");
 		return Plugin_Handled;
 	}
 
@@ -87,7 +109,198 @@ public Action:Give100tntAll(id, args)
 	GetCmdArgString(WeaponName, sizeof(WeaponName));
 
 	// Construindo o nome da arma
-	Format(weapon, sizeof(weapon), "weapon_%s", WeaponName);
+	Format(WeaponGive1, sizeof(WeaponGive1), "weapon_%s", WeaponName);
+
+	new i;
+	for (i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i))
+			continue;
+
+		if (!IsPlayerAlive(i))
+		{
+			// Se o jogador estiver morto, registre-o para distribuição posterior
+			numDeadPlayersGive1++;
+			deadPlayersGive1[numDeadPlayersGive1] = i;
+			continue;
+		}
+
+		GivePlayerItem(i, WeaponGive1);
+		FakeClientCommandEx(i, "use weapon_fists");
+		FakeClientCommandEx(i, "use %s", WeaponGive1);
+	}
+
+	return Plugin_Handled;
+}
+
+public Action:Give1DeadPlayersWeapon(Handle:timer)
+{
+	new i;
+	for (i = 1; i < MaxClients; i++)
+	{
+		new playerID = deadPlayersGive1[i];
+		if (playerID == 0)
+			continue;
+
+		if (IsPlayerAlive(playerID))
+		{
+			// Se o jogador reviver, dê a arma
+			GivePlayerItem(playerID, WeaponGive1);
+			FakeClientCommandEx(playerID, "use weapon_fists");
+			FakeClientCommandEx(playerID, "use %s", WeaponGive1);
+
+			// Remova o jogador da lista de jogadores mortos
+			deadPlayersGive1[i] = 0;
+			numDeadPlayersGive1--;
+		}
+	}
+	return Plugin_Handled;
+}
+// #############################################################################
+
+
+
+
+// ############################## Give 2 weapon ################################
+public Action:Give2WeaponAll(id, args)
+{
+	if (args < 1)
+	{
+		ReplyToCommand(id, "[SM] Usage: !give2 <weapo nname> Gives two weapons to all players\nType !gunslist to see the weapons list!");
+		return Plugin_Handled;
+	}
+
+	decl String:WeaponName[32];
+	GetCmdArgString(WeaponName, sizeof(WeaponName));
+
+	// Construindo o nome da arma
+	Format(WeaponGive2, sizeof(WeaponGive2), "weapon_%s", WeaponName);
+
+	new i;
+	for (i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i))
+			continue;
+
+		if (!IsPlayerAlive(i))
+		{
+			// Se o jogador estiver morto, registre-o para distribuição posterior
+			numDeadPlayersGive2++;
+			deadPlayersGive2[numDeadPlayersGive2] = i;
+			continue;
+		}
+
+		decl String:WeaponGive2_2[32];
+		strcopy(WeaponGive2_2, sizeof(WeaponGive2_2), WeaponGive2);
+		StrCat(WeaponGive2_2, sizeof(WeaponGive2_2), "2");
+
+		GivePlayerItem(i, WeaponGive2);
+		GivePlayerItem(i, WeaponGive2);
+		FakeClientCommandEx(i, "use weapon_fists");
+		FakeClientCommandEx(i, "use %s", WeaponGive2);
+		FakeClientCommandEx(i, "use %s", WeaponGive2_2);
+	}
+
+	return Plugin_Handled;
+}
+
+public Action:Give2DeadPlayersWeapon(Handle:timer)
+{
+	new i;
+	for (i = 1; i < MaxClients; i++)
+	{
+		new playerID = deadPlayersGive2[i];
+		if (playerID == 0)
+			continue;
+
+		if (IsPlayerAlive(playerID))
+		{
+			decl String:WeaponGive2_2[32];
+			strcopy(WeaponGive2_2, sizeof(WeaponGive2_2), WeaponGive2);
+			StrCat(WeaponGive2_2, sizeof(WeaponGive2_2), "2");
+			
+			// Se o jogador reviver, dê a arma
+			GivePlayerItem(playerID, WeaponGive2);
+			GivePlayerItem(playerID, WeaponGive2);
+			FakeClientCommandEx(playerID, "use weapon_fists");
+			FakeClientCommandEx(playerID, "use %s", WeaponGive2);
+			FakeClientCommandEx(playerID, "use %s", WeaponGive2_2);
+
+			// Remova o jogador da lista de jogadores mortos
+			deadPlayersGive2[i] = 0;
+			numDeadPlayersGive2--;
+		}
+	}
+	return Plugin_Handled;
+}
+// #############################################################################
+
+
+
+
+// ########################## Infinite Peacemaker ################################
+public Action:InfinitePeacemaker(id, args)
+{
+	new i;
+	for (i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i))
+			continue;
+
+		if (!IsPlayerAlive(i))
+		{
+			// Se o jogador estiver morto, registre-o para distribuição posterior
+			numDeadInfinitePeacemaker++;
+			deadPlayersInfinitePeacemaker[numDeadInfinitePeacemaker] = i;
+			continue;
+		}
+
+		SetEntProp(i, Prop_Send, "m_nPotionLevel", 100);
+		GivePlayerItem(i, ItemPotion); 
+	}
+
+	return Plugin_Handled;
+}
+
+public Action:InfinitePeacemakerDeadPlayers(Handle:timer)
+{
+	new i;
+	for (i = 1; i < MaxClients; i++)
+	{
+		new playerID = deadPlayersInfinitePeacemaker[i];
+		if (playerID == 0)
+			continue;
+
+		if (IsPlayerAlive(playerID))
+		{
+			// Se o jogador reviver, dê duas peacemaker infinitas
+			SetEntProp(playerID, Prop_Send, "m_nPotionLevel", 100);
+			GivePlayerItem(playerID, ItemPotion); 
+
+			// Remova o jogador da lista de jogadores mortos
+			deadPlayersInfinitePeacemaker[i] = 0;
+			numDeadInfinitePeacemaker--;
+		}
+	}
+	return Plugin_Handled;
+}
+// #############################################################################
+
+
+// ########################## Give 100 Dynamite ################################
+public Action:Give100tntAll(id, args)
+{
+	if (args < 1)
+	{
+		ReplyToCommand(id, "[SM] Usage: !tnt <tnt name>\nGives 100 dynamite to all players\nType !givelist to see the dynamites list!");
+		return Plugin_Handled;
+	}
+
+	decl String:WeaponName[32];
+	GetCmdArgString(WeaponName, sizeof(WeaponName));
+
+	// Construindo o nome da arma
+	Format(WeaponTnt, sizeof(WeaponTnt), "weapon_%s", WeaponName);
 
 	new i;
 
@@ -100,14 +313,15 @@ public Action:Give100tntAll(id, args)
 		if (!IsPlayerAlive(i))
 		{
 			// Se o jogador estiver morto, registre-o para distribuição posterior
-			deadPlayers[numDeadPlayersGiveTnt] = i;
-			numDeadPlayersGiveTnt++;
+			numDeadPlayers100Tnt++;
+			deadPlayers100Tnt[numDeadPlayers100Tnt] = i;
 			continue;
 		}
 
 		// Se o jogador estiver vivo, dê a arma imediatamente
-		GivePlayerItem(i, weapon);
-		FakeClientCommandEx(i, "use %s", weapon);
+		GivePlayerItem(i, WeaponTnt);
+		FakeClientCommandEx(i, "use weapon_fists");
+		FakeClientCommandEx(i, "use %s", WeaponTnt);
 		new weaponindex = GetEntPropEnt(i, Prop_Data, "m_hActiveWeapon");
 		SetAmmo(i, weaponindex, 100);
 	}
@@ -115,6 +329,110 @@ public Action:Give100tntAll(id, args)
 	return Plugin_Handled;
 }
 
+public Action:Give100TntDeadPlayers(Handle:timer)
+{
+	new i;
+	for (i = 1; i < MaxClients; i++)
+	{
+		new playerID = deadPlayers100Tnt[i];
+		if (playerID == 0)
+			continue;
+
+		if (IsPlayerAlive(playerID))
+		{
+			// Se o jogador reviver, dê 100 dinamites
+			GivePlayerItem(playerID, WeaponTnt);
+			FakeClientCommandEx(playerID, "use weapon_fists");
+			FakeClientCommandEx(playerID, "use %s", WeaponTnt);
+			new weaponindex = GetEntPropEnt(playerID, Prop_Data, "m_hActiveWeapon");
+			SetAmmo(playerID, weaponindex, 100);
+
+			// Remova o jogador da lista de jogadores mortos
+			deadPlayers100Tnt[i] = 0;
+			numDeadPlayers100Tnt--;
+		}
+	}
+	return Plugin_Handled;
+}
+// #############################################################################
+
+
+
+
+// ################################## Give melee weapon ################################
+public Action:GiveMeleeWeaponAll(id, args)
+{
+	if (args < 1)
+	{
+		ReplyToCommand(id, "[SM] Usage: !givecw <melee weapon name> Gives 20 melee weapon to all players\nType !gunslist to see the weapons list!");
+		return Plugin_Handled;
+	}
+
+	decl String:WeaponName[32];
+	GetCmdArgString(WeaponName, sizeof(WeaponName));
+
+	// Construindo o nome da arma
+	Format(MeleeWeapon, sizeof(MeleeWeapon), "weapon_%s", WeaponName);
+
+	new i;
+	for (i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i))
+			continue;
+
+		if (!IsPlayerAlive(i))
+		{
+			// Se o jogador estiver morto, registre-o para distribuição posterior
+			numDeadPlayersMeleeWeapon++;
+			deadPlayersMeleeWeapon[numDeadPlayersMeleeWeapon] = i;
+			continue;
+		}
+
+		new j;
+		for (j = 0; j < 20; j++)
+		{
+			GivePlayerItem(i, MeleeWeapon);
+		}		
+		FakeClientCommandEx(i, "use weapon_fists");
+		FakeClientCommandEx(i, "use %s", MeleeWeapon);
+	}
+
+	return Plugin_Handled;
+}
+
+public Action:GiveMeleeWeaponDeadPlayers(Handle:timer)
+{
+	new i;
+	for (i = 1; i < MaxClients; i++)
+	{
+		new playerID = deadPlayersMeleeWeapon[i];
+		if (playerID == 0)
+			continue;
+
+		if (IsPlayerAlive(playerID))
+		{
+			// Se o jogador reviver, dê a arma
+			new j;
+			for (j = 0; j < 20; j++)
+			{
+				GivePlayerItem(playerID, MeleeWeapon);
+			}	
+			FakeClientCommandEx(playerID, "use weapon_fists");
+			FakeClientCommandEx(playerID, "use %s", MeleeWeapon);
+
+			// Remova o jogador da lista de jogadores mortos
+			deadPlayersMeleeWeapon[i] = 0;
+			numDeadPlayersMeleeWeapon--;
+		}
+	}
+	return Plugin_Handled;
+}
+// #############################################################################
+
+
+
+
+// ################################## Set Ammo ################################
 stock SetAmmo( iClient, iWeapon, iAmmo )
 {
     if( 0 < iClient <= MaxClients && IsClientInGame( iClient ) )
@@ -126,6 +444,7 @@ stock SetAmmo( iClient, iWeapon, iAmmo )
         WritePackCell( hPack, iAmmo );
     }
 }
+
 public Action:Timer_SetAmmo( Handle:hTimer, Handle:hPack )
 {
     ResetPack( hPack );
@@ -144,182 +463,13 @@ public Action:Timer_SetAmmo( Handle:hTimer, Handle:hPack )
     SetEntData( iClient, iAmmoOffset + GetEntProp( iWeapon, Prop_Send, "m_iPrimaryAmmoType" ) * 4, ReadPackCell( hPack ) );
     return Plugin_Stop;
 }
+// #############################################################################
 
-public Action:Give100DeadPlayersTnt(Handle:timer)
-{
-	new i;
-	for (i = 0; i < MAXPLAYERS; i++)
-	{
-		new playerID = deadPlayers[i];
-		if (playerID == 0)
-			continue;
 
-		if (IsPlayerAlive(playerID))
-		{
-			// Se o jogador reviver, dê a arma
-			GivePlayerItem(playerID, weapon);
-			FakeClientCommandEx(playerID, "use %s", weapon);
-			new weaponindex = GetEntPropEnt(playerID, Prop_Data, "m_hActiveWeapon");
-			SetAmmo(playerID, weaponindex, 100);
 
-			// Remova o jogador da lista de jogadores mortos
-			deadPlayers[i] = 0;
-		}
-	}
-	return Plugin_Handled;
-}
-
-public Action:Give1WeaponAll(id, args)
-{
-    if (args < 1)
-    {
-        ReplyToCommand(id, "[SM] Usage: sm_give <weaponname> (without 'weapon_')\nGives a specific weapon to all players\nType !givelist to see the weapons list!");
-        return Plugin_Handled;
-    }
-    
-    decl String:WeaponName[32];
-    GetCmdArgString(WeaponName, sizeof(WeaponName));
-
-    // Construindo o nome da arma
-    Format(weapon, sizeof(weapon), "weapon_%s", WeaponName);
-
-    new i;
-
-    // Itera sobre os jogadores para dar a arma
-    for (i = 1; i <= MaxClients; i++)
-    {
-        if (!IsClientInGame(i))
-            continue;
-
-        if (!IsPlayerAlive(i))
-        {
-            // Se o jogador estiver morto, registre-o para distribuição posterior
-            deadPlayers[numDeadPlayersGive1] = i;
-            numDeadPlayersGive1++;
-            continue;
-        }
-
-        // Se o jogador estiver vivo, dê a arma imediatamente
-        GivePlayerItem(i, weapon);
-        FakeClientCommandEx(i, "use %s", weapon);
-    }
-
-    return Plugin_Handled;
-}
-
-public Action:Give1DeadPlayersWeapon(Handle:timer)
-{
-    new i;
-    for (i = 0; i < MAXPLAYERS; i++)
-    {
-        new playerID = deadPlayers[i];
-        if (playerID == 0)
-            continue;
-
-        if (IsPlayerAlive(playerID))
-        {
-            // Se o jogador reviver, dê a arma
-            GivePlayerItem(playerID, weapon);
-            FakeClientCommandEx(playerID, "use %s", weapon);
-
-            // Remova o jogador da lista de jogadores mortos
-            deadPlayers[i] = 0;
-        }
-    }
-    return Plugin_Handled;
-}
-
-public Action:Give2WeaponAll(id, args)
-{
-	if (args < 1)
-	{
-		ReplyToCommand(id, "[SM] Usage: sm_give2 <weaponname> (without 'weapon_')\nGives two specific weapons to all players\nType !givelist to see the weapons list!");
-		return Plugin_Handled;
-	}
-
-	decl String:WeaponName2[32];
-	GetCmdArgString(WeaponName2, sizeof(WeaponName2));
-
-	// Construindo o nome da arma
-	Format(weapon, sizeof(weapon), "weapon_%s", WeaponName2);
-
-	// Adiciona o sufixo "2" ao nome da arma
-	decl String:weapon2_suffixed[32];
-	strcopy(weapon2_suffixed, sizeof(weapon2_suffixed), weapon);
-	StrCat(weapon2_suffixed, sizeof(weapon2_suffixed), "2");
-
-	new i;
-	// Itera sobre os jogadores para dar a arma
-	for (i = 1; i <= MaxClients; i++)
-	{
-		if (!IsClientInGame(i))
-			continue;
-
-		if (!IsPlayerAlive(i))
-		{
-			// Se o jogador estiver morto, registre-o para distribuição posterior
-			deadPlayers[numDeadPlayersGive2] = i;
-			numDeadPlayersGive2++;
-			continue;
-		}
-
-		GivePlayerItem(i, weapon);
-		GivePlayerItem(i, weapon);
-		FakeClientCommandEx(i, "use %s", weapon);		
-		FakeClientCommandEx(i, "use %s", weapon2_suffixed);
-	}
-	return Plugin_Handled;
-}
-
-public Action:Give2DeadPlayersWeapon(Handle:timer)
-{
-	new i;
-	for (i = 0; i < MAXPLAYERS; i++)
-	{
-		new playerID = deadPlayers[i];
-		if (playerID == 0)
-			continue;
-
-		if (IsPlayerAlive(playerID))
-		{
-			// Adiciona o sufixo "2" ao nome da arma
-			decl String:weapon2_suffixed[32];
-			strcopy(weapon2_suffixed, sizeof(weapon2_suffixed), weapon);
-			StrCat(weapon2_suffixed, sizeof(weapon2_suffixed), "2");
-
-			// Se o jogador reviver, dê a arma
-			GivePlayerItem(playerID, weapon);
-			GivePlayerItem(playerID, weapon);
-			FakeClientCommandEx(playerID, "use %s", weapon);
-			FakeClientCommandEx(playerID, "use %s", weapon2_suffixed);
-
-			// Remova o jogador da lista de jogadores mortos
-			deadPlayers[i] = 0;
-		}
-	}
-	return Plugin_Handled;
-}
-
-public Action:InfinitePeacemaker(id, args)
-{
-	decl String:ItemPotion[32] = "item_potion";
-
-	new i;
-	for (i = 1; i <= MaxClients; i++)
-	{
-		if (!IsClientInGame(i) || !IsPlayerAlive(i))
-			continue;
-
-		SetEntProp(i, Prop_Send, "m_nPotionLevel", 100);
-		GivePlayerItem(i, ItemPotion); 
-	}
-
-	return Plugin_Handled;
-}
 
 public Action:Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	// Agendar uma verificação para dar armas aos jogadores mortos assim que reviverem
 	if (numDeadPlayersGive1 > 0)
 	{
 		CreateTimer(0.1, Give1DeadPlayersWeapon);
@@ -330,44 +480,18 @@ public Action:Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroa
 		CreateTimer(0.1, Give2DeadPlayersWeapon);
 	}
 
-	if (numDeadPlayersGiveTnt > 0)
+	if (numDeadInfinitePeacemaker > 0)
 	{
-		CreateTimer(0.1, Give100DeadPlayersTnt);
+		CreateTimer(0.1, InfinitePeacemakerDeadPlayers);
+	}
+
+	if (numDeadPlayers100Tnt > 0)
+	{
+		CreateTimer(0.1, Give100TntDeadPlayers);
+	}
+
+	if (numDeadPlayersMeleeWeapon > 0)
+	{
+		CreateTimer(0.1, GiveMeleeWeaponDeadPlayers);
 	}
 }
-
-// Temporariamente desativado, não consigo fazer o barril aparecer sempre na frente do jogador :/
-//public Action:SpawnLargeTntBarrelToAll(client, args)
-//{
-//	//[0] = Position on the X axis ( left and right )
-//	//[1] = Position on the Y axis ( front and back )*
-//	//[2] = Position on the Z axis ( up and down )
-//
-//	new i;
-//	for (i = 1; i <= MaxClients; i++)
-//	{
-//		if (!IsClientInGame(i) || !IsPlayerAlive(i))
-//			continue;
-//
-//		new Float:pos[3];
-//		GetClientAbsOrigin(i, pos);
-//		pos[1] -= 100.0;
-//
-//		new Float:ang[3];
-//		GetClientEyeAngles(i, ang);
-//		//ang[1] = ang[1] + 90.0;
-//		
-//		PrintToChatAll("\x04 Angle: %0.2f %0.2f %0.2f",pos[0],pos[1],pos[2]);
-//		PrintToChatAll("\x04 Angle: %0.2f %0.2f %0.2f",ang[0],ang[1],ang[2]);
-//
-//		largeTntBarrel[i] = CreateEntityByName("prop_physics_multiplayer");
-//
-//		if (largeTntBarrel[i] == -1) { ReplyToCommand(i, "item failed to create."); return; }
-//
-//		DispatchKeyValue(largeTntBarrel[i], "model", TNT_BARREL_MODEL);
-//		DispatchKeyValue(largeTntBarrel[i], "disableshadows", "1");
-//		DispatchKeyValue(largeTntBarrel[i], "spawnflags", "256");
-//		DispatchSpawn(largeTntBarrel[i]);
-//		TeleportEntity(largeTntBarrel[i], pos, ang, NULL_VECTOR);
-//	}
-//}
