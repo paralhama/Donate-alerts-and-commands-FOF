@@ -124,8 +124,11 @@ public SaveMessageToLog(const String:message[]) {
 	if(logFile != INVALID_HANDLE) {
 		// Filtra as tags de cor da mensagem antes de escrevê-la no arquivo de log
 		RemoveColorTags(message, filteredMessage, sizeof(filteredMessage));
-		ReplaceString(filteredMessage, sizeof(filteredMessage), "ENVIE SEU DONATE NO SITE:\nFARWEST.COM.BR/COMANDOS\nPARA ATIVAR COMANDOS NO SERVIDOR!", "");
+		ReplaceString(filteredMessage, sizeof(filteredMessage), "ENVIE SEU DONATE NO SITE:", "");
+		ReplaceString(filteredMessage, sizeof(filteredMessage), "FARWEST.COM.BR/COMANDOS", "");
+		ReplaceString(filteredMessage, sizeof(filteredMessage), "PARA ATIVAR COMANDOS NO SERVIDOR!\n ", "");
 		ReplaceString(filteredMessage, sizeof(filteredMessage), "\n", " ");
+		ReplaceString(filteredMessage, sizeof(filteredMessage), "   ", "");
 
 		WriteFileLine(logFile, "======================================== %s - %s ========================================", FormatedDate, FormatedTime);
 		WriteFileLine(logFile, filteredMessage);
