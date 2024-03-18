@@ -59,83 +59,21 @@ public OnPluginStart()
 
 
 // ############################## Donate Alert ##################################
-// Exibe o alerta de donate na tela de todos os jogadores
-public Action:Cmd_Alert(client, args) {
-    if(args < 1) {
-        ReplyToCommand(client, "[SM] Usage: sm_alert <color> <text> \nExample: !print {red}Hello World! \nYou can use \\n to write in a new line");
-        return Plugin_Handled;
-    }
-
-    decl String:str[512];
-    GetCmdArgString(str, sizeof(str));
-
-    // Substituir \n por uma quebra de linha real
-    ReplaceString(str, sizeof(str), "\\n", "\n");
-
-    // Salvar a mensagem no arquivo de log
-    SaveMessageToLog(str);
-
-    EmitSoundToAll(SOUND_ALERT);
-    CPrintToChatAll(str);
-    return Plugin_Handled;
-}
-
-//Remove as TAGs de cor do alerta de donate para depois salvar no log de donates
-public void RemoveColorTags(const String:message[], String:filteredMessage[], maxlen) {
-    new i = 0, j = 0;
-    while (message[i] != '\0' && j < maxlen - 1) {
-        if (message[i] == '{') {
-            // Ignora todas as tags de cor até encontrar o final da tag
-            while (message[i] != '}' && message[i] != '\0') {
-                i++;
-            }
-            // Verifica se a tag de cor foi fechada
-            if (message[i] == '}')
-                i++; // Avança para o próximo caractere após a tag de cor
-        } else {
-            filteredMessage[j] = message[i];
-            i++;
-            j++;
-        }
-    }
-    filteredMessage[j] = '\0'; // Adiciona o caractere nulo no final da string filtrada
-}
-
-// Salve o alerta de donate no log
-public SaveMessageToLog(const String:message[]) {
-	decl String:logPath[PLATFORM_MAX_PATH];
-	decl Handle:logFile;
-	decl String:FormatedDate[100];
-	decl String:FormatedTime[100];
-	decl String:filteredMessage[512]; // Define um tamanho máximo para a mensagem filtrada
-
-	new CurrentTime = GetTime();
-
-	FormatTime(FormatedDate, 100, "%d/%m/%Y", CurrentTime);
-	FormatTime(FormatedTime, 100, "%X", CurrentTime);
-
-	// Defina o caminho do arquivo de log
-	BuildPath(Path_SM, logPath, sizeof(logPath), "logs/donates.log");
-
-	// Abra o arquivo de log para adicionar a mensagem
-	logFile = OpenFile(logPath, "a+");
-
-	// Se o arquivo de log foi aberto com sucesso, escreva a mensagem nele
-	if(logFile != INVALID_HANDLE) {
-		// Filtra as tags de cor da mensagem antes de escrevê-la no arquivo de log
-		RemoveColorTags(message, filteredMessage, sizeof(filteredMessage));
-		ReplaceString(filteredMessage, sizeof(filteredMessage), "ENVIE SEU DONATE NO SITE:\nFARWEST.COM.BR/COMANDOS\nPARA ATIVAR COMANDOS NO SERVIDOR!", "");
-		ReplaceString(filteredMessage, sizeof(filteredMessage), "\n", " ");
-
-		WriteFileLine(logFile, "======================================== %s - %s ========================================", FormatedDate, FormatedTime);
-		WriteFileLine(logFile, filteredMessage);
-		WriteFileLine(logFile, "=======================================================================================================");
-		WriteFileLine(logFile, "");
-		WriteFileLine(logFile, "");
-		CloseHandle(logFile);
+public Action:Cmd_Alert(client, args){
+	if(args<1){
+		ReplyToCommand(client, "[SM] Usage: sm_alert <color> <text> \nExample: !print {red}Hello World! \nYou can use \\n to write in a new line");
+		return Plugin_Handled;
 	}
-}
+	decl String:str[512];
+	GetCmdArgString(str, sizeof(str));
 
+	// Substituir \n por uma quebra de linha real
+	ReplaceString(str, sizeof(str), "\\n", "\n");
+
+	EmitSoundToAll(SOUND_ALERT);
+	CPrintToChatAll(str);
+	return Plugin_Handled;
+}
 // ###########################################################################
 
 
